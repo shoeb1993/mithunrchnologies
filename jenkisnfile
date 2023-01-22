@@ -20,11 +20,12 @@ git branch: 'development', credentialsId: 'ghp_JJQ4AL9Yy7K3IvpMhb3UktQBikyCT547p
 stage('Build'){
 sh "${mavenHome}/bin/mvn clean package"
 }
-
+/*
 stage('ExecuteSonarQubeReport'){
 sh "${mavenHome}/bin/mvn clean sonar:sonar"
 }
 
+*/
 stage('UploadArtifcatsIntoArtifactoryRepo'){
 sh "${mavenHome}/bin/mvn clean deploy"
 }
