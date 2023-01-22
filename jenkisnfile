@@ -8,11 +8,20 @@ echo "The Jenkins HD is: ${env.JENKINS_HOME}"
 properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '5', daysToKeepStr: '', numToKeepStr: '5')), [$class: 'JobLocalConfiguration', changeReasonComment: ''], pipelineTriggers([pollSCM('* * * * *')])])
 
 
+echo "Jenkins url is: ${env.JENKINS_URL}"
+echo "Node Name is: ${env.NODE_NAME}"
+echo "Job name is: ${env.JOB_NAME}"
+
+
+
+
+properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '5', daysToKeepStr: '', numToKeepStr: '5')), [$class: 'JobLocalConfiguration', changeReasonComment: ''], pipelineTriggers([pollSCM('* * * * *')])])
+
 def mavenHome = tool name: 'maven3.8.7'
+
 try{
 stage('CheckOutCode'){
-sendslacknotifications('STARTED')
-git branch: 'development', credentialsId: 'c5d5e5d2-dd99-409b-a952-b8e9ae34f1bd', url: 'https://github.com/MithunTechnologiesDevOps/maven-web-application.git'
+git branch: 'development', credentialsId: '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', url: 'https://github.com/shoeb1993/mithunrchnologies.git'
 }
 
 stage('Build'){
@@ -23,18 +32,23 @@ stage('ExecuteSonarQubeReport'){
 sh "${mavenHome}/bin/mvn clean sonar:sonar"
 }
 
-stage('UploadArtifcatsIntoNexus'){
+*/
+stage('UploadArtifcatsIntoArtifactoryRepo'){
 sh "${mavenHome}/bin/mvn clean deploy"
 }
 
+ /*
 stage('DeployAppIntoTomcatServer'){
-sshagent(['34a51f9e-565d-4311-bf10-6c30e2434e5c']) {
- sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war ec2-user@172.31.27.111:/opt/apache-tomcat-9.0.70/webapps/"  
-}
+sshagent(['dc292b7a-3b39-4630-9fc3-1b806b54412c']) {
+ sh "scp -o StrictHostKeyChecking=no target/maven-web-application.war  ec2-user@172.31.7.80:/opt/apache-tomcat-9.0.65/webapps/"
+
+} 
+
 }
 */
 }
-}
+
+
 catch(e){
 currentBuild.result="FAILURE"
 }
@@ -69,8 +83,5 @@ def sendslacknotifications(String buildStatus = 'STARTED') {
   }
 
   // Send notifications
-  slackSend (color: colorCode, message: summary, channel: '#citibank-team')
+  slackSend (color: colorCode, message: summary, channel: '#jenkinsslacknotify')
 }
-
-
-
