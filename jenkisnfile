@@ -1,6 +1,12 @@
-node{
+ode{
+    
+   echo "The Job Name is: ${env.JOB_NAME}" 
+echo "The Build number is: ${env.BUILD_NUMBER}" 
+echo "The Node is name is: ${env.NODE_NAME}" 
+echo "The Jenkins HD is: ${env.JENKINS_HOME}" 
 
-def mavenHome = tool name: "maven3.8.7"
+properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '5', daysToKeepStr: '', numToKeepStr: '5')), [$class: 'JobLocalConfiguration', changeReasonComment: ''], pipelineTriggers([pollSCM('* * * * *')])])
+
 
 echo "Jenkins url is: ${env.JENKINS_URL}"
 echo "Node Name is: ${env.NODE_NAME}"
@@ -11,8 +17,9 @@ echo "Job name is: ${env.JOB_NAME}"
 
 properties([buildDiscarder(logRotator(artifactDaysToKeepStr: '', artifactNumToKeepStr: '5', daysToKeepStr: '', numToKeepStr: '5')), [$class: 'JobLocalConfiguration', changeReasonComment: ''], pipelineTriggers([pollSCM('* * * * *')])])
 
+def mavenHome = tool name: 'maven3.8.7
 
-
+try{
 stage('CheckOutCode'){
 git branch: 'development', credentialsId: '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', url: 'https://github.com/shoeb1993/mithunrchnologies.git'
 }
@@ -39,5 +46,43 @@ sshagent(['dc292b7a-3b39-4630-9fc3-1b806b54412c']) {
 
 }
 */
+}
 
 }
+catch(e){
+currentBuild.result="FAILURE"
+}
+finally{
+sendslacknotifications(currentBuild.result)
+}
+
+  
+}//node closing
+
+//slack notification function
+def sendslacknotifications(String buildStatus = 'STARTED') {
+  // build status of null means successful
+  buildStatus =  buildStatus ?: 'SUCCESS'
+
+  // Default values
+  def colorName = 'RED'
+  def colorCode = '#FF0000'
+  def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"
+  def summary = "${subject} (${env.BUILD_URL})"
+
+  // Override default values based on build status
+  if (buildStatus == 'STARTED') {
+    colorName = 'YELLOW'
+    colorCode = '#FFFF00'
+  } else if (buildStatus == 'SUCCESS') {
+    colorName = 'GREEN'
+    colorCode = '#00FF00'
+  } else {
+    colorName = 'RED'
+    colorCode = '#FF0000'
+  }
+
+  // Send notifications
+  slackSend (color: colorCode, message: summary, channel: '#jenkinsslacknotify')
+}
+
